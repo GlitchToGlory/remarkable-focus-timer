@@ -2,7 +2,7 @@
 
 A clean, minimal Pomodoro timer for the **reMarkable Paper Pure**, built as an [AppLoad](https://github.com/asivery/rm-appload) (xovi) QML app. Black on white, designed for e-ink.
 
-The app can be windowed and sit on top of notes and documents (swipe down from the top centre of the reMarkable tablet).
+The app can be windowed and sit on top of notes and documents (swipe down from the top centre of the reMarkable tablet). The app can also be fully maximised.
 
 **[Live web demo](https://GlitchToGlory.github.io/remarkable-focus-timer/)** (same timer logic as the tablet app)
 
