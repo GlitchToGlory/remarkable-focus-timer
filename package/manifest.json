@@ -1,0 +1,9 @@
+{
+    "id": "remarkable-focus-timer",
+    "name": "Focus Timer",
+    "loadsBackend": false,
+    "entry": "/qml/main.qml",
+    "canHaveMultipleFrontends": false,
+    "supportsScaling": true,
+    "aspectRatio": "original"
+}

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>reMarkable Focus Timer - web demo</title>
+<style>
+  :root { --bg:#fff; --fg:#000; --mut:#555; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111; --fg:#fff; --mut:#aaa; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:system-ui,sans-serif; display:flex; justify-content:center; min-height:100vh; }
+  main { width:min(100%,520px); padding:16px; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; }
+  .card { border:3px solid var(--fg); border-radius:20px; padding:6% 5% 7%; text-align:center; }
+  .tabs { display:flex; gap:2%; }
+  .tabs button { flex:1; border:0; border-radius:10px; padding:12px 4px; font-size:clamp(13px,3.6vw,18px); background:var(--bg); color:var(--fg); cursor:pointer; }
+  .tabs button.on { background:var(--fg); color:var(--bg); font-weight:700; }
+  #clock { font-size:clamp(64px,22vw,120px); font-weight:700; margin:6% 0 0; line-height:1.1; }
+  #msg { min-height:1.6em; margin:2% 0 4%; font-size:1.05rem; }
+  .row { display:flex; justify-content:center; align-items:center; gap:3%; }
+  #go { width:50%; padding:16px 0; font-size:1.3rem; font-weight:700; border:3px solid var(--fg); border-radius:12px; background:var(--fg); color:var(--bg); cursor:pointer; }
+  #go:active { background:var(--bg); color:var(--fg); }
+  #reset { border:2px solid var(--fg); border-radius:10px; padding:10px 14px; background:var(--bg); color:var(--fg); font-size:1rem; cursor:pointer; }
+  .hidden { visibility:hidden; }
+  #alarm { position:fixed; top:0; left:0; right:0; padding:16px; text-align:center; font-weight:700; font-size:1.1rem; border-bottom:3px solid var(--fg); background:var(--fg); color:var(--bg); display:none; }
+  #alarm.show { display:block; } #alarm.off { background:var(--bg); color:var(--fg); }
+  p.note { color:var(--mut); font-size:.85rem; text-align:center; margin:16px 0 0; }
+  a { color:inherit; }
+</style>
+</head>
+<body>
+<div id="alarm">Timer finished</div>
+<main>
+  <div class="card">
+    <div class="tabs" id="tabs"></div>
+    <div id="clock">25:00</div>
+    <div id="msg"></div>
+    <div class="row"><button id="go">START</button><button id="reset" class="hidden">Reset</button></div>
+  </div>
+  <p class="note">Web demo of the timer logic (<code>focus.js</code>) that runs on the tablet. <a href="https://github.com/GlitchToGlory/remarkable-focus-timer">Source on GitHub</a></p>
+</main>
+<script>
+fetch("focus.js").then(r => r.text()).then(src => {
+  const F = new Function(src.replace(/^\.pragma library.*$/m, "") +
+    "; return { MODES, LABELS, DEFAULTS, initial, selectMode, toggle, remainingMs, tick, clockText, buttonLabel, canReset };")();
+  const cfg = F.DEFAULTS, $ = id => document.getElementById(id);
+  let st = F.initial(cfg), flash = true;
+  const tabs = F.MODES.map(m => {
+    const b = document.createElement("button"); b.textContent = F.LABELS[m];
+    b.onclick = () => { st = F.selectMode(st, m, cfg); render(); };
+    $("tabs").appendChild(b); return b;
+  });
+  $("go").onclick = () => { st = F.toggle(st, Date.now()); render(); };
+  $("reset").onclick = () => { st = F.selectMode(st, st.mode, cfg); render(); };
+  function render() {
+    const text = F.clockText(F.remainingMs(st, Date.now()));
+    $("clock").textContent = text;
+    document.title = st.alarm ? (flash ? "TIME'S UP - Focus Timer" : text + " - Focus Timer") : text + " - Focus Timer";
+    $("alarm").classList.toggle("show", st.alarm); $("alarm").classList.toggle("off", !flash);
+    $("msg").textContent = st.message;
+    $("go").textContent = F.buttonLabel(st, cfg);
+    $("reset").classList.toggle("hidden", !F.canReset(st, cfg));
+    tabs.forEach((b, i) => b.classList.toggle("on", F.MODES[i] === st.mode));
+  }
+  let wasAlarm = false;
+  setInterval(() => { st = F.tick(st, cfg, Date.now()).st; if (st.alarm && !wasAlarm) flash = true; else if (st.alarm) flash = !flash; else flash = true; wasAlarm = st.alarm; render(); }, 1000);
+  render();
+}).catch(() => { document.getElementById("msg").textContent = "Could not load focus.js"; });
+</script>
+</body>
+</html>
